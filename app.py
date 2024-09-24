@@ -1,19 +1,18 @@
 import asyncio
 import websockets
 import json
+import os  # Para leer las variables de entorno
 
 # Diccionario para almacenar conexiones de usuarios por canales
 channels = {}
 
 async def handler(websocket, path):
     try:
-        # Espera la conexión inicial con los datos del usuario
         async for message in websocket:
             data = json.loads(message)
             action = data.get('action')
             
             if action == 'join':
-                # Si el usuario quiere unirse a un canal
                 username = data.get('username')
                 channel_name = data.get('channel')
                 
@@ -24,7 +23,6 @@ async def handler(websocket, path):
                 await notify_channel(channel_name, f"{username} se ha unido al canal {channel_name}.")
             
             elif action == 'message':
-                # Mensaje para el canal
                 channel_name = data.get('channel')
                 username = data.get('username')
                 msg = data.get('message')
@@ -33,7 +31,6 @@ async def handler(websocket, path):
                     await notify_channel(channel_name, f"{username}: {msg}")
                     
     except websockets.ConnectionClosed:
-        # Manejar desconexión
         print("Conexión cerrada")
     finally:
         # Eliminar al usuario de todos los canales
@@ -48,8 +45,11 @@ async def notify_channel(channel, message):
         if websockets_in_channel:
             await asyncio.wait([ws.send(message) for ws in websockets_in_channel])
 
+# Obtener el puerto asignado por Railway
+PORT = int(os.environ.get('PORT', 8765))  # Railway asigna el puerto a través de la variable PORT
+
 # Iniciar el servidor WebSocket
-start_server = websockets.serve(handler, "localhost", 8765)
+start_server = websockets.serve(handler, "0.0.0.0", PORT)
 
 asyncio.get_event_loop().run_until_complete(start_server)
 asyncio.get_event_loop().run_forever()
