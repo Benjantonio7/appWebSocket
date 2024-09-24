@@ -49,7 +49,7 @@ async def notify_channel(channel, message):
 PORT = int(os.environ.get('PORT', 8765))  # Railway asigna el puerto a través de la variable PORT
 
 # Iniciar el servidor WebSocket
-start_server = websockets.serve(handler, "0.0.0.0", PORT)
+start_server = websockets.serve(handler, "0.0.0.0", 5000)
 
 asyncio.get_event_loop().run_until_complete(start_server)
 asyncio.get_event_loop().run_forever()
